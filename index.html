@@ -45,7 +45,7 @@
     .legend-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(0,0,0,.06); }
     .table-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: auto; box-shadow: 0 2px 5px rgba(16,24,40,.025); }
     table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 760px; }
-    table.compare-mode { min-width: 1260px; }
+    table.compare-mode { min-width: 1260px; table-layout: fixed; }
     th, td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     thead th { position: sticky; top: 0; z-index: 3; padding: 12px; background: #f9fafb; text-align: center; font-size: 13px; font-weight: 650; line-height: 1.35; }
     table.compare-mode thead tr:nth-child(2) th { top: 67px; z-index: 4; }
@@ -96,9 +96,9 @@
     </section>
     <section class="metric-switch" aria-label="指标切换">
       <span class="metric-switch-label">主表查看</span>
-      <button class="metric-switch-btn active" data-metric="binding"><strong>电子价签绑定率</strong><small>低于 70% 警告；85% 及以上达标</small></button>
+      <button class="metric-switch-btn" data-metric="binding"><strong>电子价签绑定率</strong><small>低于 70% 警告；85% 及以上良好</small></button>
       <button class="metric-switch-btn" data-metric="display"><strong>陈列满足率</strong><small>低于 100% 未满足；100% 及以上已满足</small></button>
-      <button class="metric-switch-btn" data-metric="compare"><strong>两个率同时查看</strong><small>按门店并列查看绑定率与陈列满足率</small></button>
+      <button class="metric-switch-btn active" data-metric="compare"><strong>两个率同时查看</strong><small>按门店并列查看绑定率与陈列满足率</small></button>
     </section>
     <section class="filter-panel" aria-label="品类筛选">
       <span class="filter-label">品类筛选</span>
@@ -116,7 +116,7 @@
       </div>
     </section>
     <div class="legend" id="bindingLegend" aria-label="绑定率颜色说明">
-      <span>绑定率：</span><span class="legend-item"><i class="legend-swatch" style="background:#fecaca"></i>&lt;70% 警告</span><span class="legend-item"><i class="legend-swatch" style="background:#fde68a"></i>70%–&lt;85% 关注</span><span class="legend-item"><i class="legend-swatch" style="background:#bbf7d0"></i>≥85% 达标</span>
+      <span>绑定率：</span><span class="legend-item"><i class="legend-swatch" style="background:#fecaca"></i>&lt;70% 警告</span><span class="legend-item"><i class="legend-swatch" style="background:#fde68a"></i>70%–&lt;85% 关注</span><span class="legend-item"><i class="legend-swatch" style="background:#bbf7d0"></i>≥85% 良好</span>
     </div>
     <div class="legend is-hidden" id="displayLegend" aria-label="陈列满足率颜色说明">
       <span>陈列满足率：</span><span class="legend-item"><i class="legend-swatch" style="background:#e9d5ff"></i>&lt;100% 未满足</span><span class="legend-item"><i class="legend-swatch" style="background:#bfdbfe"></i>≥100% 已满足</span>
@@ -143,7 +143,7 @@
 
     const table = document.getElementById('matrix');
     let activeSort = null;
-    let activeMetric = 'binding';
+    let activeMetric = 'compare';
     let activeFilter = 'all';
     let activeInterestFilter = 'all';
     const metricConfig = {
@@ -185,6 +185,7 @@
     function renderTable(categories) {
       const compareMode = activeMetric === 'compare';
       const metric = metricConfig[activeMetric] || metricConfig.binding;
+      const colgroup = compareMode ? `<colgroup><col style="width:190px">${data.stores.map(() => '<col>').join('')}</colgroup>` : '';
       const storeHeader = data.stores.map(store => `<th scope="${compareMode ? 'colgroup' : 'col'}" colspan="${compareMode ? 2 : 1}" title="${store.name}"><span class="store-name">${store.shortName}</span><span class="sort-actions"><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'asc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="asc">↑ 升序</button><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'desc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="desc">↓ 降序</button></span></th>`).join('');
       const compareHeaders = data.stores.map(() => '<th class="metric-head" scope="col">绑定率</th><th class="metric-head" scope="col">陈列满足率</th>').join('');
       const header = compareMode
@@ -201,7 +202,7 @@
         if (cell[metric.field] == null) return '<td><span class="blank">—</span></td>';
         return `<td><button class="rate" title="${metric.label}：${percentage(cell[metric.field])}" style="${metric.style(cell[metric.field])}" data-store="${encodeURIComponent(store.name)}" data-category="${encodeURIComponent(category)}">${percentage(cell[metric.field])}</button></td>`;
       }).join('')}</tr>`).join('');
-      table.innerHTML = header + `<tbody>${rows}</tbody>`;
+      table.innerHTML = colgroup + header + `<tbody>${rows}</tbody>`;
       table.classList.toggle('compare-mode', compareMode);
     }
     function sortedCategories(categories, store, order) {
