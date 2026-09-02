@@ -26,6 +26,12 @@
     .metric-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
     .metric-value { font-size: 24px; font-weight: 720; font-variant-numeric: tabular-nums; }
     .metric-note { margin-left: 6px; color: var(--muted); font-size: 12px; font-weight: 400; }
+    .filter-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 13px 15px; margin: 0 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+    .filter-label { margin-right: 4px; color: var(--muted); font-size: 13px; font-weight: 620; }
+    .filter-btn { padding: 7px 11px; border: 1px solid #d6dde6; border-radius: 99px; background: #fff; color: #47586b; cursor: pointer; font: inherit; font-size: 13px; line-height: 1.2; white-space: nowrap; }
+    .filter-btn:hover, .filter-btn.active { border-color: #8bb5f4; background: var(--blue-soft); color: #185cc3; font-weight: 650; }
+    .interest-filters { display: none; align-items: center; flex-wrap: wrap; gap: 7px; width: 100%; padding-top: 9px; margin-top: 1px; border-top: 1px dashed #dbe2eb; }
+    .interest-filters.visible { display: flex; }
     .legend { display: flex; justify-content: flex-end; gap: 12px; align-items: center; padding: 0 3px 10px; color: var(--muted); font-size: 12px; }
     .legend-scale { height: 9px; width: 142px; border-radius: 99px; background: linear-gradient(90deg, #fbe5e6, #fbdcaa, #d8efc5, #bce4d0, #83c8b1); }
     .table-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: auto; box-shadow: 0 2px 5px rgba(16,24,40,.025); }
@@ -78,6 +84,21 @@
       <article class="metric"><span class="metric-label">门店数量</span><strong class="metric-value" id="storeCount">--</strong><span class="metric-note">家</span></article>
       <article class="metric"><span class="metric-label">品类数量</span><strong class="metric-value" id="categoryCount">--</strong><span class="metric-note">个</span></article>
     </section>
+    <section class="filter-panel" aria-label="品类筛选">
+      <span class="filter-label">品类筛选</span>
+      <button class="filter-btn active" data-filter="all">全部</button>
+      <button class="filter-btn" data-filter="phone" title="手机-苹果机型、手机-安卓机型">手机</button>
+      <button class="filter-btn" data-filter="core" title="笔记本、平板电脑、智能手表、耳机/耳麦、相机机身、相机镜头">5品类</button>
+      <button class="filter-btn" data-filter="interest">兴趣品类</button>
+      <button class="filter-btn" data-filter="electronic">兴趣-电子</button>
+      <div class="interest-filters" id="interestFilters" aria-label="兴趣品类细分">
+        <span class="filter-label">细分</span>
+        <button class="filter-btn active" data-interest-filter="all">全部兴趣</button>
+        <button class="filter-btn" data-interest-filter="toy" title="吊卡、手办、盲盒、大娃、潮玩周边">潮玩</button>
+        <button class="filter-btn" data-interest-filter="instrument" title="自动挡吉他、民谣吉他、尤克里里">乐器</button>
+        <button class="filter-btn" data-interest-filter="racket" title="羽毛球拍、乒乓球拍、网球拍">球拍</button>
+      </div>
+    </section>
     <div class="legend"><span>指标较低</span><span class="legend-scale"></span><span>指标较高</span></div>
     <section class="table-card" aria-label="门店品类绑定率矩阵"><table id="matrix"></table></section>
   </main>
@@ -94,15 +115,40 @@
       const hue = 2 + bounded * 150;
       return `hsl(${hue} 60% ${94 - bounded * 22}%)`;
     };
-    const allCells = Object.values(data.matrix);
-    document.getElementById('overallRate').textContent = percentage(allCells.reduce((sum, cell) => sum + cell.bindingAvg, 0) / allCells.length);
-    document.getElementById('overallDisplayRate').textContent = percentage(allCells.reduce((sum, cell) => sum + cell.displayAvg, 0) / allCells.length);
     document.getElementById('storeCount').textContent = data.stores.length;
-    document.getElementById('categoryCount').textContent = data.categories.length;
     document.getElementById('updated').textContent = `${data.snapshots.length} 个采集时点 · ${data.sourcePeriod} · 源数据 ${data.recordCount} 条`;
 
     const table = document.getElementById('matrix');
     let activeSort = null;
+    let activeFilter = 'all';
+    let activeInterestFilter = 'all';
+    const categoryGroups = {
+      phone: ['手机-苹果机型', '手机-安卓机型'],
+      core: ['笔记本', '平板电脑', '智能手表', '耳机/耳麦', '相机机身', '相机镜头'],
+      interest: ['潮玩', '吊卡', '手办', '盲盒', '大娃', '潮玩周边', '自动挡吉他', '民谣吉他', '吉他', '尤克里里', '羽毛球拍', '乒乓球拍', '网球拍'],
+    };
+    categoryGroups.electronic = data.categories.filter(category => ![...categoryGroups.phone, ...categoryGroups.core, ...categoryGroups.interest].includes(category));
+    const interestGroups = {
+      all: categoryGroups.interest,
+      toy: ['潮玩', '吊卡', '手办', '盲盒', '大娃', '潮玩周边'],
+      instrument: ['自动挡吉他', '民谣吉他', '吉他', '尤克里里'],
+      racket: ['羽毛球拍', '乒乓球拍', '网球拍'],
+    };
+    function filteredCategories() {
+      const group = activeFilter === 'all'
+        ? data.categories
+        : activeFilter === 'interest'
+          ? interestGroups[activeInterestFilter]
+          : categoryGroups[activeFilter];
+      return data.categories.filter(category => group.includes(category));
+    }
+    function updateSummary(categories) {
+      const cells = data.stores.flatMap(store => categories.map(category => getCell(store.name, category)).filter(Boolean));
+      const average = (field) => cells.length ? cells.reduce((sum, cell) => sum + cell[field], 0) / cells.length : 0;
+      document.getElementById('overallRate').textContent = percentage(average('bindingAvg'));
+      document.getElementById('overallDisplayRate').textContent = percentage(average('displayAvg'));
+      document.getElementById('categoryCount').textContent = categories.length;
+    }
     function renderTable(categories) {
       const storeHeader = data.stores.map(store => `<th scope="colgroup" colspan="2" title="${store.name}"><span class="store-name">${store.shortName}</span><span class="sort-actions"><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'asc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="asc">↑ 绑定率升序</button><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'desc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="desc">↓ 降序</button></span></th>`).join('');
       const metricHeader = data.stores.map(() => '<th class="metric-head" scope="col">平均绑定率</th><th class="metric-head" scope="col">平均陈列满足率</th>').join('');
@@ -114,9 +160,9 @@
       }).join('')}</tr>`).join('');
       table.innerHTML = header + `<tbody>${rows}</tbody>`;
     }
-    function sortedCategories(store, order) {
+    function sortedCategories(categories, store, order) {
       const multiplier = order === 'asc' ? 1 : -1;
-      return [...data.categories].sort((a, b) => {
+      return [...categories].sort((a, b) => {
         const aRate = getCell(store, a)?.bindingAvg;
         const bRate = getCell(store, b)?.bindingAvg;
         if (aRate == null && bRate == null) return 0;
@@ -125,7 +171,15 @@
         return (aRate - bRate) * multiplier;
       });
     }
-    renderTable(data.categories);
+    function refreshView() {
+      const categories = filteredCategories();
+      updateSummary(categories);
+      renderTable(activeSort ? sortedCategories(categories, activeSort.store, activeSort.order) : categories);
+      document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('active', button.dataset.filter === activeFilter));
+      document.querySelectorAll('[data-interest-filter]').forEach(button => button.classList.toggle('active', button.dataset.interestFilter === activeInterestFilter));
+      document.getElementById('interestFilters').classList.toggle('visible', activeFilter === 'interest');
+    }
+    refreshView();
 
     const dialog = document.getElementById('detailDialog');
     function showDetail(store, category) {
@@ -143,11 +197,24 @@
         const store = decodeURIComponent(sortButton.dataset.sortStore);
         const order = sortButton.dataset.order;
         activeSort = activeSort?.store === store && activeSort?.order === order ? null : {store, order};
-        renderTable(activeSort ? sortedCategories(activeSort.store, activeSort.order) : data.categories);
+        refreshView();
         return;
       }
       const button = event.target.closest('.rate');
       if (button) showDetail(decodeURIComponent(button.dataset.store), decodeURIComponent(button.dataset.category));
+    });
+    document.querySelector('.filter-panel').addEventListener('click', event => {
+      const filterButton = event.target.closest('[data-filter]');
+      if (filterButton) {
+        activeFilter = filterButton.dataset.filter;
+        refreshView();
+        return;
+      }
+      const interestButton = event.target.closest('[data-interest-filter]');
+      if (interestButton) {
+        activeInterestFilter = interestButton.dataset.interestFilter;
+        refreshView();
+      }
     });
     document.getElementById('closeModal').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
