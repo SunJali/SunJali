@@ -26,6 +26,15 @@
     .metric-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
     .metric-value { font-size: 24px; font-weight: 720; font-variant-numeric: tabular-nums; }
     .metric-note { margin-left: 6px; color: var(--muted); font-size: 12px; font-weight: 400; }
+    .metric.selected { border-color: #8bb5f4; background: #f7fbff; }
+    .metric.selected .metric-value { color: #185cc3; }
+    .metric-switch { display: flex; align-items: stretch; flex-wrap: wrap; gap: 9px; margin: 0 0 12px; }
+    .metric-switch-label { display: flex; align-items: center; color: var(--muted); font-size: 13px; font-weight: 620; margin-right: 3px; }
+    .metric-switch-btn { min-width: 176px; padding: 11px 14px; border: 1px solid #d6dde6; border-radius: 10px; background: #fff; color: #47586b; cursor: pointer; text-align: left; font: inherit; }
+    .metric-switch-btn strong { display: block; font-size: 14px; }
+    .metric-switch-btn small { display: block; margin-top: 3px; color: #718096; font-size: 11px; }
+    .metric-switch-btn:hover, .metric-switch-btn.active { border-color: #5493ed; background: var(--blue-soft); color: #185cc3; box-shadow: 0 1px 3px rgba(32,103,216,.10); }
+    .metric-switch-btn.active small { color: #3d6fae; }
     .filter-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 13px 15px; margin: 0 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .filter-label { margin-right: 4px; color: var(--muted); font-size: 13px; font-weight: 620; }
     .filter-btn { padding: 7px 11px; border: 1px solid #d6dde6; border-radius: 99px; background: #fff; color: #47586b; cursor: pointer; font: inherit; font-size: 13px; line-height: 1.2; white-space: nowrap; }
@@ -36,10 +45,9 @@
     .legend-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
     .legend-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(0,0,0,.06); }
     .table-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: auto; box-shadow: 0 2px 5px rgba(16,24,40,.025); }
-    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1260px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 760px; }
     th, td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     thead th { position: sticky; top: 0; z-index: 3; padding: 12px; background: #f9fafb; text-align: center; font-size: 13px; font-weight: 650; line-height: 1.35; }
-    thead tr:nth-child(2) th { top: 67px; z-index: 4; }
     thead th:first-child { position: sticky; left: 0; z-index: 5; text-align: left; min-width: 160px; }
     tbody th { position: sticky; left: 0; z-index: 2; min-width: 160px; padding: 10px 14px; background: #fff; text-align: left; font-size: 13px; font-weight: 540; white-space: nowrap; }
     td { height: 56px; padding: 7px; text-align: center; background: #fff; }
@@ -50,7 +58,6 @@
     .rate:focus-visible { outline: 3px solid rgba(32,103,216,.35); outline-offset: 1px; }
     .blank { color: #a5afba; font-size: 13px; }
     .store-name { display: block; min-height: 28px; }
-    .metric-head { padding: 7px 5px !important; color: var(--muted); font-size: 11px !important; font-weight: 540 !important; }
     .sort-actions { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
     .sort-btn { padding: 3px 6px; border: 1px solid #d6dde6; border-radius: 5px; background: #fff; color: #526273; cursor: pointer; font-size: 11px; line-height: 1.2; white-space: nowrap; }
     .sort-btn:hover, .sort-btn.active { border-color: #8bb5f4; background: #eaf2ff; color: #185cc3; }
@@ -70,7 +77,8 @@
     .detail-table th, .detail-table td { position: static; min-width: 0; height: auto; padding: 9px 7px; background: transparent; text-align: right; font-size: 12px; }
     .detail-table th:first-child, .detail-table td:first-child { text-align: left; }
     .detail-table th { color: var(--muted); font-weight: 500; }
-    @media (max-width: 680px) { .shell { padding: 16px; } .topbar { align-items: flex-start; flex-direction: column; gap: 8px; } .summary { grid-template-columns: 1fr; gap: 9px; } .legend { justify-content: flex-start; } .time-grid { gap: 7px; } }
+    .legend.is-hidden { display: none; }
+    @media (max-width: 680px) { .shell { padding: 16px; } .topbar { align-items: flex-start; flex-direction: column; gap: 8px; } .summary { grid-template-columns: 1fr; gap: 9px; } .metric-switch { display: grid; grid-template-columns: 1fr 1fr; } .metric-switch-label { grid-column: 1 / -1; } .metric-switch-btn { min-width: 0; } .legend { justify-content: flex-start; } .time-grid { gap: 7px; } }
   </style>
 </head>
 <body>
@@ -80,10 +88,15 @@
       <div class="updated" id="updated"></div>
     </div>
     <section class="summary" aria-label="总体概览">
-      <article class="metric"><span class="metric-label">整体平均绑定率</span><strong class="metric-value" id="overallRate">--</strong></article>
-      <article class="metric"><span class="metric-label">整体平均陈列满足率</span><strong class="metric-value" id="overallDisplayRate">--</strong></article>
+      <article class="metric selected" id="bindingSummary"><span class="metric-label">整体平均绑定率</span><strong class="metric-value" id="overallRate">--</strong></article>
+      <article class="metric" id="displaySummary"><span class="metric-label">整体平均陈列满足率</span><strong class="metric-value" id="overallDisplayRate">--</strong></article>
       <article class="metric"><span class="metric-label">门店数量</span><strong class="metric-value" id="storeCount">--</strong><span class="metric-note">家</span></article>
       <article class="metric"><span class="metric-label">品类数量</span><strong class="metric-value" id="categoryCount">--</strong><span class="metric-note">个</span></article>
+    </section>
+    <section class="metric-switch" aria-label="指标切换">
+      <span class="metric-switch-label">主表查看</span>
+      <button class="metric-switch-btn active" data-metric="binding"><strong>电子价签绑定率</strong><small>低于 70% 警告；85% 及以上达标</small></button>
+      <button class="metric-switch-btn" data-metric="display"><strong>陈列满足率</strong><small>低于 100% 未满足；100% 及以上已满足</small></button>
     </section>
     <section class="filter-panel" aria-label="品类筛选">
       <span class="filter-label">品类筛选</span>
@@ -100,8 +113,10 @@
         <button class="filter-btn" data-interest-filter="racket" title="羽毛球拍、乒乓球拍、网球拍">球拍</button>
       </div>
     </section>
-    <div class="legend" aria-label="颜色说明">
+    <div class="legend" id="bindingLegend" aria-label="绑定率颜色说明">
       <span>绑定率：</span><span class="legend-item"><i class="legend-swatch" style="background:#fecaca"></i>&lt;70% 警告</span><span class="legend-item"><i class="legend-swatch" style="background:#fde68a"></i>70%–&lt;85% 关注</span><span class="legend-item"><i class="legend-swatch" style="background:#bbf7d0"></i>≥85% 达标</span>
+    </div>
+    <div class="legend is-hidden" id="displayLegend" aria-label="陈列满足率颜色说明">
       <span>陈列满足率：</span><span class="legend-item"><i class="legend-swatch" style="background:#e9d5ff"></i>&lt;100% 未满足</span><span class="legend-item"><i class="legend-swatch" style="background:#bfdbfe"></i>≥100% 已满足</span>
     </div>
     <section class="table-card" aria-label="门店品类绑定率矩阵"><table id="matrix"></table></section>
@@ -127,8 +142,13 @@
 
     const table = document.getElementById('matrix');
     let activeSort = null;
+    let activeMetric = 'binding';
     let activeFilter = 'all';
     let activeInterestFilter = 'all';
+    const metricConfig = {
+      binding: { field: 'bindingAvg', label: '平均绑定率', style: bindingStyle },
+      display: { field: 'displayAvg', label: '平均陈列满足率', style: displayStyle },
+    };
     const categoryGroups = {
       phone: ['手机-苹果机型', '手机-安卓机型'],
       core: ['笔记本', '平板电脑', '智能手表', '耳机/耳麦', '相机机身', '相机镜头'],
@@ -155,23 +175,25 @@
       document.getElementById('overallRate').textContent = percentage(average('bindingAvg'));
       document.getElementById('overallDisplayRate').textContent = percentage(average('displayAvg'));
       document.getElementById('categoryCount').textContent = categories.length;
+      document.getElementById('bindingSummary').classList.toggle('selected', activeMetric === 'binding');
+      document.getElementById('displaySummary').classList.toggle('selected', activeMetric === 'display');
     }
     function renderTable(categories) {
-      const storeHeader = data.stores.map(store => `<th scope="colgroup" colspan="2" title="${store.name}"><span class="store-name">${store.shortName}</span><span class="sort-actions"><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'asc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="asc">↑ 绑定率升序</button><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'desc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="desc">↓ 降序</button></span></th>`).join('');
-      const metricHeader = data.stores.map(() => '<th class="metric-head" scope="col">平均绑定率</th><th class="metric-head" scope="col">平均陈列满足率</th>').join('');
-      const header = `<thead><tr><th scope="col" rowspan="2">品类 ↓ ／ 门店 →</th>${storeHeader}</tr><tr>${metricHeader}</tr></thead>`;
+      const metric = metricConfig[activeMetric];
+      const storeHeader = data.stores.map(store => `<th scope="col" title="${store.name}"><span class="store-name">${store.shortName}</span><span class="sort-actions"><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'asc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="asc">↑ 升序</button><button class="sort-btn ${activeSort?.store === store.name && activeSort.order === 'desc' ? 'active' : ''}" data-sort-store="${encodeURIComponent(store.name)}" data-order="desc">↓ 降序</button></span></th>`).join('');
+      const header = `<thead><tr><th scope="col">品类 ↓ ／ 门店 →<br><span style="font-size:11px;font-weight:500;color:#718096">${metric.label}</span></th>${storeHeader}</tr></thead>`;
       const rows = categories.map(category => `<tr><th scope="row">${category}</th>${data.stores.map(store => {
         const cell = getCell(store.name, category);
-        if (!cell) return '<td><span class="blank">—</span></td><td><span class="blank">—</span></td>';
-        return `<td><button class="rate" title="绑定率：${percentage(cell.bindingAvg)}" style="${bindingStyle(cell.bindingAvg)}" data-store="${encodeURIComponent(store.name)}" data-category="${encodeURIComponent(category)}">${percentage(cell.bindingAvg)}</button></td><td><button class="rate" title="陈列满足率：${percentage(cell.displayAvg)}" style="${displayStyle(cell.displayAvg)}" data-store="${encodeURIComponent(store.name)}" data-category="${encodeURIComponent(category)}">${percentage(cell.displayAvg)}</button></td>`;
+        if (!cell) return '<td><span class="blank">—</span></td>';
+        return `<td><button class="rate" title="${metric.label}：${percentage(cell[metric.field])}" style="${metric.style(cell[metric.field])}" data-store="${encodeURIComponent(store.name)}" data-category="${encodeURIComponent(category)}">${percentage(cell[metric.field])}</button></td>`;
       }).join('')}</tr>`).join('');
       table.innerHTML = header + `<tbody>${rows}</tbody>`;
     }
     function sortedCategories(categories, store, order) {
       const multiplier = order === 'asc' ? 1 : -1;
       return [...categories].sort((a, b) => {
-        const aRate = getCell(store, a)?.bindingAvg;
-        const bRate = getCell(store, b)?.bindingAvg;
+        const aRate = getCell(store, a)?.[metricConfig[activeMetric].field];
+        const bRate = getCell(store, b)?.[metricConfig[activeMetric].field];
         if (aRate == null && bRate == null) return 0;
         if (aRate == null) return 1;
         if (bRate == null) return -1;
@@ -184,7 +206,10 @@
       renderTable(activeSort ? sortedCategories(categories, activeSort.store, activeSort.order) : categories);
       document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('active', button.dataset.filter === activeFilter));
       document.querySelectorAll('[data-interest-filter]').forEach(button => button.classList.toggle('active', button.dataset.interestFilter === activeInterestFilter));
+      document.querySelectorAll('[data-metric]').forEach(button => button.classList.toggle('active', button.dataset.metric === activeMetric));
       document.getElementById('interestFilters').classList.toggle('visible', activeFilter === 'interest');
+      document.getElementById('bindingLegend').classList.toggle('is-hidden', activeMetric !== 'binding');
+      document.getElementById('displayLegend').classList.toggle('is-hidden', activeMetric !== 'display');
     }
     refreshView();
 
@@ -222,6 +247,13 @@
         activeInterestFilter = interestButton.dataset.interestFilter;
         refreshView();
       }
+    });
+    document.querySelector('.metric-switch').addEventListener('click', event => {
+      const metricButton = event.target.closest('[data-metric]');
+      if (!metricButton) return;
+      activeMetric = metricButton.dataset.metric;
+      activeSort = null;
+      refreshView();
     });
     document.getElementById('closeModal').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
