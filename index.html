@@ -17,10 +17,9 @@
     * { box-sizing: border-box; }
     body { margin: 0; color: var(--ink); background: var(--canvas); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
     .shell { max-width: 1640px; padding: 28px; margin: 0 auto; }
-    .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 22px; }
+    .topbar { margin-bottom: 22px; }
     h1 { margin: 0; font-size: 26px; letter-spacing: -.4px; }
     .subtitle { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
-    .updated { flex: 0 0 auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
     .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0 0 22px; }
     .metric { padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 2px rgba(16,24,40,.02); }
     .metric-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
@@ -88,7 +87,6 @@
   <main class="shell">
     <div class="topbar">
       <div><h1>门店价签绑定率看板</h1><p class="subtitle">按门店与品类汇总各采集时点的平均绑定率与平均陈列满足率；点击数值展开明细。</p></div>
-      <div class="updated" id="updated"></div>
     </div>
     <section class="summary" aria-label="总体概览">
       <article class="metric selected" id="bindingSummary"><span class="metric-label">整体平均绑定率</span><strong class="metric-value" id="overallRate">--</strong></article>
@@ -142,7 +140,6 @@
       ? '--rate-bg:#e9d5ff;--rate-border:#a855f7;--rate-ink:#6b21a8'
       : '--rate-bg:#bfdbfe;--rate-border:#3b82f6;--rate-ink:#1d4ed8';
     document.getElementById('storeCount').textContent = data.stores.length;
-    document.getElementById('updated').textContent = `${data.snapshots.length} 个采集时点 · ${data.sourcePeriod} · 源数据 ${data.recordCount} 条`;
 
     const table = document.getElementById('matrix');
     let activeSort = null;
