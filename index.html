@@ -102,7 +102,7 @@
     </section>
     <div class="legend" aria-label="颜色说明">
       <span>绑定率：</span><span class="legend-item"><i class="legend-swatch" style="background:#fecaca"></i>&lt;70% 警告</span><span class="legend-item"><i class="legend-swatch" style="background:#fde68a"></i>70%–&lt;85% 关注</span><span class="legend-item"><i class="legend-swatch" style="background:#bbf7d0"></i>≥85% 达标</span>
-      <span>陈列满足率：</span><span class="legend-item"><i class="legend-swatch" style="background:#fecaca"></i>&lt;100% 未满足</span><span class="legend-item"><i class="legend-swatch" style="background:#bbf7d0"></i>≥100% 已满足</span>
+      <span>陈列满足率：</span><span class="legend-item"><i class="legend-swatch" style="background:#e9d5ff"></i>&lt;100% 未满足</span><span class="legend-item"><i class="legend-swatch" style="background:#bfdbfe"></i>≥100% 已满足</span>
     </div>
     <section class="table-card" aria-label="门店品类绑定率矩阵"><table id="matrix"></table></section>
   </main>
@@ -120,8 +120,8 @@
         ? '--rate-bg:#fde68a;--rate-border:#fbbf24;--rate-ink:#854d0e'
         : '--rate-bg:#bbf7d0;--rate-border:#4ade80;--rate-ink:#166534';
     const displayStyle = value => value < 1
-      ? '--rate-bg:#fecaca;--rate-border:#f87171;--rate-ink:#991b1b'
-      : '--rate-bg:#bbf7d0;--rate-border:#4ade80;--rate-ink:#166534';
+      ? '--rate-bg:#e9d5ff;--rate-border:#a855f7;--rate-ink:#6b21a8'
+      : '--rate-bg:#bfdbfe;--rate-border:#3b82f6;--rate-ink:#1d4ed8';
     document.getElementById('storeCount').textContent = data.stores.length;
     document.getElementById('updated').textContent = `${data.snapshots.length} 个采集时点 · ${data.sourcePeriod} · 源数据 ${data.recordCount} 条`;
 
