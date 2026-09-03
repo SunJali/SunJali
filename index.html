@@ -110,7 +110,7 @@
       <span class="time-note" id="timeNote"></span>
       <div class="time-days" id="timeDays" aria-label="按日筛选"></div>
     </section>
-    <section class="filter-panel" aria-label="品类筛选">
+    <section class="filter-panel" aria-label="品类筛选" id="categoryPanel">
       <span class="filter-label">品类筛选</span>
       <button class="filter-btn active" data-filter="all">全部</button>
       <button class="filter-btn" data-filter="phone" title="手机-苹果机型、手机-安卓机型">手机</button>
@@ -294,7 +294,7 @@
       const button = event.target.closest('.rate');
       if (button) showDetail(decodeURIComponent(button.dataset.store), decodeURIComponent(button.dataset.category));
     });
-    document.querySelector('.filter-panel').addEventListener('click', event => {
+    document.getElementById('categoryPanel').addEventListener('click', event => {
       const filterButton = event.target.closest('[data-filter]');
       if (filterButton) {
         activeFilter = filterButton.dataset.filter;
